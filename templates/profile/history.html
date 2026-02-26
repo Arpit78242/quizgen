@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}History — QuizGen{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Quiz History</h1>
+    <p class="page-sub">All your past quiz attempts</p>
+  </div>
+  <a href="/quiz/generate" class="btn btn-primary">+ New Quiz</a>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-label">Total Quizzes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ avg_score }}%</div>
+    <div class="stat-label">Avg Score</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ user.username }}</div>
+    <div class="stat-label">Account</div>
+  </div>
+</div>
+
+{% if sessions %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Quiz</th>
+        <th>Questions</th>
+        <th>Difficulty</th>
+        <th>Score</th>
+        <th>Time</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in sessions %}
+      <tr>
+        <td class="td-title">{{ s.title or 'Untitled Quiz' }}</td>
+        <td>{{ s.total_questions }}</td>
+        <td><span class="badge badge-{{ s.difficulty }}">{{ s.difficulty }}</span></td>
+        <td>
+          {% if s.status in ['completed','timed_out'] %}
+            <span class="score-cell {% if s.percentage >= 80 %}score-high{% elif s.percentage >= 50 %}score-mid{% else %}score-low{% endif %}">
+              {{ s.score }}/{{ s.total_questions }} <em>({{ s.percentage }}%)</em>
+            </span>
+          {% else %}
+            <span class="muted">—</span>
+          {% endif %}
+        </td>
+        <td class="muted">
+          {% if s.time_taken_seconds %}
+            {% set t = s.time_taken_seconds %}
+            {{ '%d:%02d' % (t // 60, t % 60) }}
+          {% else %}—{% endif %}
+        </td>
+        <td><span class="status-badge status-{{ s.status }}">{{ s.status.replace('_',' ') }}</span></td>
+        <td class="muted">{{ s.created_at.strftime('%b %d, %Y') }}</td>
+        <td>
+          {% if s.status in ['completed','timed_out'] %}
+          <a href="/quiz/{{ s.id }}/review" class="btn btn-ghost btn-sm">Review</a>
+          {% elif s.status in ['pending','in_progress'] %}
+          <a href="/quiz/{{ s.id }}/attempt" class="btn btn-primary btn-sm">Continue</a>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+  {% if page > 1 %}
+  <a href="?page={{ page - 1 }}" class="btn btn-ghost btn-sm">← Prev</a>
+  {% endif %}
+  <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+  {% if page < total_pages %}
+  <a href="?page={{ page + 1 }}" class="btn btn-ghost btn-sm">Next →</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">📋</div>
+  <h3>No quiz history yet</h3>
+  <p>Complete your first quiz to see it here</p>
+  <a href="/quiz/generate" class="btn btn-primary">Generate a Quiz</a>
+</div>
+{% endif %}
+{% endblock %}

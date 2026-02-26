@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Quiz — QuizGen{% endblock %}
+
+{% block content %}
+<div class="quiz-layout">
+  <!-- Header bar with timer -->
+  <div class="quiz-topbar">
+    <div class="quiz-meta">
+      <span class="quiz-title-sm">{{ session.title }}</span>
+      <span class="badge badge-{{ session.difficulty }}">{{ session.difficulty }}</span>
+    </div>
+    <div class="timer-block" id="timerBlock">
+      <span class="timer-icon">⏱</span>
+      <span class="timer-display" id="timerDisplay">--:--</span>
+    </div>
+    <div class="quiz-progress-info">
+      <span id="progressLabel">1 / {{ session.total_questions }}</span>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+  </div>
+
+  <!-- Question area -->
+  <div class="quiz-body">
+    <div class="question-nav" id="questionNav"></div>
+
+    <div class="question-area" id="questionArea">
+      <!-- Rendered by JS -->
+    </div>
+
+    <div class="quiz-controls">
+      <button class="btn btn-ghost" id="prevBtn" onclick="prevQuestion()" disabled>← Prev</button>
+      <button class="btn btn-ghost" id="nextBtn" onclick="nextQuestion()">Next →</button>
+      <button class="btn btn-primary" id="submitBtn" onclick="confirmSubmit()" style="display:none">Submit Quiz</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-overlay hidden" id="confirmModal">
+  <div class="modal">
+    <h3>Submit Quiz?</h3>
+    <p id="confirmMsg">You have answered <strong id="answeredCount">0</strong> of <strong>{{ session.total_questions }}</strong> questions.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Keep Answering</button>
+      <button class="btn btn-primary" onclick="submitQuiz()">Submit Now</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/quiz.js"></script>
+<script>
+  const QUESTIONS = {{ questions_json | safe }};
+  const SESSION_ID = "{{ session.id }}";
+  const TIME_LIMIT = {{ time_limit }};
+  initQuiz(QUESTIONS, SESSION_ID, TIME_LIMIT);
+</script>
+{% endblock %}

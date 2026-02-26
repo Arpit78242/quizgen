@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — QuizGen{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Welcome back, <span>{{ user.username }}</span></h1>
+    <p class="page-sub">Ready to test your knowledge today?</p>
+  </div>
+  <a href="/quiz/generate" class="btn btn-primary">+ New Quiz</a>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num">{{ total_quizzes }}</div>
+    <div class="stat-label">Total Quizzes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ completed_count }}</div>
+    <div class="stat-label">Completed</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">{{ avg_score }}%</div>
+    <div class="stat-label">Avg Score</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">
+    <h2>Quick Start</h2>
+  </div>
+  <div class="quickstart-grid">
+    <a href="/sources/" class="quickstart-card">
+      <div class="qs-icon">📄</div>
+      <div class="qs-title">Upload a File</div>
+      <div class="qs-sub">PDF, DOCX, or Image</div>
+    </a>
+    <a href="/sources/" class="quickstart-card">
+      <div class="qs-icon">💡</div>
+      <div class="qs-title">Enter a Topic</div>
+      <div class="qs-sub">AI generates from scratch</div>
+    </a>
+    <a href="/quiz/generate" class="quickstart-card">
+      <div class="qs-icon">⚡</div>
+      <div class="qs-title">Quick Quiz</div>
+      <div class="qs-sub">Use an existing source</div>
+    </a>
+  </div>
+</div>
+
+{% if recent_sessions %}
+<div class="section">
+  <div class="section-header">
+    <h2>Recent Quizzes</h2>
+    <a href="/profile/" class="link-muted">View all →</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Quiz</th>
+          <th>Difficulty</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in recent_sessions %}
+        <tr>
+          <td class="td-title">{{ s.title or 'Untitled Quiz' }}</td>
+          <td><span class="badge badge-{{ s.difficulty }}">{{ s.difficulty }}</span></td>
+          <td>
+            {% if s.status in ['completed','timed_out'] %}
+              <span class="score-cell">{{ s.score }}/{{ s.total_questions }} <em>({{ s.percentage }}%)</em></span>
+            {% else %}
+              <span class="muted">—</span>
+            {% endif %}
+          </td>
+          <td><span class="status-badge status-{{ s.status }}">{{ s.status.replace('_',' ') }}</span></td>
+          <td class="muted">{{ s.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            {% if s.status in ['completed','timed_out'] %}
+            <a href="/quiz/{{ s.id }}/review" class="btn btn-ghost btn-sm">Review</a>
+            {% elif s.status in ['pending','in_progress'] %}
+            <a href="/quiz/{{ s.id }}/attempt" class="btn btn-primary btn-sm">Continue</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">🎯</div>
+  <h3>No quizzes yet</h3>
+  <p>Generate your first quiz to get started!</p>
+  <a href="/sources/" class="btn btn-primary">Get Started</a>
+</div>
+{% endif %}
+{% endblock %}

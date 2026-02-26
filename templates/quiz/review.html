@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Review — QuizGen{% endblock %}
+
+{% block content %}
+<div class="review-layout">
+  <!-- Score card -->
+  <div class="score-card">
+    <div class="score-ring">
+      <svg viewBox="0 0 120 120" class="ring-svg">
+        <circle cx="60" cy="60" r="50" class="ring-bg" />
+        <circle cx="60" cy="60" r="50" class="ring-fill"
+          stroke-dasharray="{{ (session.percentage | float or 0) * 3.14159 }}, 314.159"
+          style="--pct: {{ session.percentage or 0 }}" />
+      </svg>
+      <div class="ring-label">
+        <div class="ring-pct">{{ (session.percentage | float or 0) }}%</div>
+        <div class="ring-sub">{{ session.score }}/{{ session.total_questions }}</div>
+      </div>
+    </div>
+
+    <div class="score-meta">
+      <h1>{{ session.title or 'Quiz Review' }}</h1>
+      <div class="score-stats">
+        <div class="ss-item">
+          <div class="ss-val">{{ session.difficulty.capitalize() }}</div>
+          <div class="ss-key">Difficulty</div>
+        </div>
+        <div class="ss-item">
+          {% set taken = session.time_taken_seconds or 0 %}
+          <div class="ss-val">{{ '%d:%02d' % (taken // 60, taken % 60) }}</div>
+          <div class="ss-key">Time Taken</div>
+        </div>
+        <div class="ss-item">
+          {% set limit = session.time_limit_seconds %}
+          <div class="ss-val">{{ '%d:%02d' % (limit // 60, limit % 60) }}</div>
+          <div class="ss-key">Time Limit</div>
+        </div>
+        <div class="ss-item">
+          <div class="ss-val status-{{ session.status }}">{{ session.status.replace('_',' ').title() }}</div>
+          <div class="ss-key">Status</div>
+        </div>
+      </div>
+
+      <div class="review-actions">
+        <a href="/quiz/generate" class="btn btn-primary">New Quiz</a>
+        <a href="/profile/" class="btn btn-ghost">All History</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions review -->
+  <div class="review-questions">
+    <h2>Question Breakdown</h2>
+    {% for q in questions %}
+    <div class="review-q {% if q.is_correct %}q-correct{% elif q.selected_option %}q-wrong{% else %}q-skipped{% endif %}">
+      <div class="rq-header">
+        <span class="rq-num">Q{{ q.order_index }}</span>
+        {% if q.is_correct %}
+          <span class="rq-badge correct">✓ Correct</span>
+        {% elif q.selected_option %}
+          <span class="rq-badge wrong">✗ Wrong</span>
+        {% else %}
+          <span class="rq-badge skipped">— Skipped</span>
+        {% endif %}
+      </div>
+
+      <div class="rq-question">{{ q.question_text }}</div>
+
+      <div class="rq-options">
+        {% for opt_key, opt_val in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+        <div class="rq-opt
+          {% if opt_key == q.correct_option %}opt-correct{% endif %}
+          {% if q.selected_option == opt_key and opt_key != q.correct_option %}opt-selected-wrong{% endif %}
+          {% if q.selected_option == opt_key and opt_key == q.correct_option %}opt-selected-correct{% endif %}
+        ">
+          <span class="opt-key">{{ opt_key }}</span>
+          <span class="opt-text">{{ opt_val }}</span>
+          {% if opt_key == q.correct_option %}<span class="opt-tag">✓ Correct</span>{% endif %}
+          {% if q.selected_option == opt_key and opt_key != q.correct_option %}<span class="opt-tag wrong-tag">Your answer</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if q.explanation %}
+      <div class="rq-explanation">
+        <strong>Explanation:</strong> {{ q.explanation }}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Study Sources — QuizGen{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Study Sources</h1>
+    <p class="page-sub">Upload files or enter topics to generate quizzes from</p>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<div class="source-grid">
+  <!-- File Upload -->
+  <div class="card">
+    <h2 class="card-title">Upload a File</h2>
+    <p class="card-sub">PDF, Word document, or image with text</p>
+    <form method="POST" action="/sources/upload" enctype="multipart/form-data" id="uploadForm">
+      <div class="drop-zone" id="dropZone">
+        <div class="dz-icon">📎</div>
+        <div class="dz-text">Drag & drop or <label for="fileInput" class="dz-browse">browse</label></div>
+        <div class="dz-sub">PDF, DOCX, PNG, JPG — max 10MB</div>
+        <input type="file" id="fileInput" name="file" accept=".pdf,.docx,.doc,.png,.jpg,.jpeg" hidden />
+        <div class="dz-filename" id="dzFilename"></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full mt-4" id="uploadBtn">Upload & Continue</button>
+    </form>
+  </div>
+
+  <!-- Topic Input -->
+  <div class="card">
+    <h2 class="card-title">Enter a Topic</h2>
+    <p class="card-sub">AI will generate questions from any topic you specify</p>
+    <form method="POST" action="/sources/topic">
+      <div class="form-group">
+        <label for="topic">Topic</label>
+        <input type="text" id="topic" name="topic" placeholder="e.g. World War II, Photosynthesis, Python decorators..." required />
+      </div>
+      <button type="submit" class="btn btn-secondary btn-full">Use This Topic</button>
+    </form>
+  </div>
+</div>
+
+{% if sources %}
+<div class="section">
+  <div class="section-header">
+    <h2>Your Sources</h2>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name / Topic</th>
+          <th>Type</th>
+          <th>Added</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sources %}
+        <tr>
+          <td class="td-title">
+            {% if s.source_type == 'topic' %}
+              💡 {{ s.topic }}
+            {% else %}
+              📄 {{ s.file_name }}
+            {% endif %}
+          </td>
+          <td><span class="badge badge-{{ s.source_type }}">{{ s.source_type }}</span></td>
+          <td class="muted">{{ s.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <a href="/quiz/generate?source_id={{ s.id }}" class="btn btn-primary btn-sm">Quiz</a>
+            <form method="POST" action="/sources/delete/{{ s.id }}" style="display:inline">
+              <button type="submit" class="btn btn-ghost btn-sm btn-danger" onclick="return confirm('Delete this source?')">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const dzFilename = document.getElementById('dzFilename');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) {
+      dzFilename.textContent = fileInput.files[0].name;
+      dzFilename.style.display = 'block';
+    }
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-over');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      fileInput.files = files;
+      dzFilename.textContent = files[0].name;
+      dzFilename.style.display = 'block';
+    }
+  });
+</script>
+{% endblock %}
