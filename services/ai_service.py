@@ -112,17 +112,25 @@ def _parse_questions(raw_response: str, num_questions: int) -> List[Dict]:
 
 
 def _call_chat_api(messages: list) -> str:
-    """Call HuggingFace chat completions API (works with Groq-routed models)."""
-    from huggingface_hub import InferenceClient
+    """Call HuggingFace chat completions API via new router endpoint."""
+    import httpx
 
-    client = InferenceClient(token=settings.HF_API_TOKEN)
-    response = client.chat_completion(
-        model=settings.HF_MODEL_ID,
-        messages=messages,
-        max_tokens=3000,
-        temperature=0.3,
+    response = httpx.post(
+        f"https://router.huggingface.co/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {settings.HF_API_TOKEN}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": settings.HF_MODEL_ID,
+            "messages": messages,
+            "max_tokens": 3000,
+            "temperature": 0.3,
+        },
+        timeout=60.0,
     )
-    return response.choices[0].message.content
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
 
 
 async def generate_questions_from_text(raw_text: str, num_questions: int, difficulty: str) -> List[Dict]:
